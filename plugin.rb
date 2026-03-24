@@ -11,6 +11,14 @@
 # 开启后插件功能生效，关闭后恢复原生行为
 enabled_site_setting :custom_emoji_priority_enabled
 
+# 监听站点设置变化事件，当插件开关变化时清除 Emoji 缓存
+DiscourseEvent.on(:site_setting_changed) do |name, _old_value, _new_value|
+  if name == :custom_emoji_priority_enabled
+    Emoji.clear_cache
+    Discourse.request_refresh!
+  end
+end
+
 # after_initialize 是 Discourse 的生命周期钩子
 # 在 Rails 应用初始化完成后、请求处理之前执行
 # 此时所有 gems、插件、模型都已加载完成
