@@ -116,10 +116,9 @@ after_initialize do
     # 最后一步：过滤被禁用的 emoji
     # ---------------------------------------------------------
     if denied_emojis.present?
-      # reject 返回新数组，包含所有不在 denied_emojis 中的 emoji
-      result.reject { |e| denied_emojis.include?(e.name) }
-    else
-      result
+      # reject 返回新数组，需要赋值给 result
+      result = result.reject { |e| denied_emojis.include?(e.name) }
     end
+    result
   end
 end
