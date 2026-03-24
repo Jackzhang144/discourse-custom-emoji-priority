@@ -1,0 +1,4 @@
+plugins:
+  custom_emoji_priority_enabled:
+    default: false
+    client: true

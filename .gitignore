@@ -1,0 +1,27 @@
+# IDE
+.idea/
+*.iml
+
+# macOS
+.DS_Store
+
+# Ruby
+*.gem
+.bundle/
+vendor/
+
+# Rails
+log/
+tmp/
+.env
+.env.*
+
+# Discourse specific
+public/assets/
+public/plugins/
+node_modules/
+
+# Editor backups
+*.swp
+*.swo
+*~
