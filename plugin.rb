@@ -28,9 +28,9 @@ after_initialize do
   # ---------------------------------------------------------
   # 因为我们即将用 define_singleton_method 覆盖此方法
   # 所以需要先保存原始方法的引用，以便在设置关闭时回退
-  # instance_method(:method_name) 获取方法的 UnboundMethod 对象
-  # 它可以被绑定到任意对象上执行
-  original_load_allowed = Emoji.instance_method(:load_allowed)
+  # method(:method_name) 获取类方法的 Method 对象
+  # instance_method(:method_name) 只能获取实例方法，无法获取类方法
+  original_load_allowed = Emoji.method(:load_allowed)
 
   # ---------------------------------------------------------
   # 第二步：定义我们自定义的 load_allowed 方法
@@ -44,9 +44,8 @@ after_initialize do
     # ---------------------------------------------------------
     unless SiteSetting.custom_emoji_priority_enabled
       # 设置关闭时，调用原始的 load_allowed 方法并返回结果
-      # bind(self) 将保存的 UnboundMethod 绑定到当前 Emoji 对象
-      # 然后通过 .call 执行调用
-      return original_load_allowed.bind(self).call
+      # Method 对象可以直接调用，不需要 bind
+      return original_load_allowed.call
     end
 
     # ---------------------------------------------------------
@@ -80,44 +79,21 @@ after_initialize do
     group_order = standard_emojis.map(&:group).uniq
 
     # ---------------------------------------------------------
-    # 将所有 emoji（标准 + 自定义）按分组聚合
-    # group_by(&:group) 返回 Hash，key 是分组名，value 是该分组的 emoji 数组
+    # 将所有 emoji（标准 + 自定义）混合后排序
+    # 排序规则：
+    #   1. 所有自定义 emoji 排在所有标准 emoji 前面
+    #   2. 自定义 emoji 之间按分组顺序排列
+    #   3. 标准 emoji 之间保持原有顺序
     # ---------------------------------------------------------
-    all_grouped = (standard_emojis + custom_emojis).group_by(&:group)
+    all_emojis = standard_emojis + custom_emojis
 
-    # ---------------------------------------------------------
-    # 对每个分组内的 emoji 进行排序
-    # 排序规则：自定义 emoji 排在前面，标准 emoji 排在后面
-    # ---------------------------------------------------------
-    all_grouped.each do |group, emojis|
-      # sort_by 根据返回值排序，0 排在 1 前面
-      # is_custom 判断逻辑：
-      #   - created_by.present? 表示从数据库加载的自定义 emoji
-      #   - plugin_emoji_names.include?(e.name) 表示由插件注册的自定义 emoji
-      all_grouped[group] = emojis.sort_by do |e|
-        is_custom = e.created_by.present? || plugin_emoji_names.include?(e.name)
-        # true (自定义) -> 0 (排在前面)
-        # false (标准) -> 1 (排在后面)
-        is_custom ? 0 : 1
-      end
-    end
-
-    # ---------------------------------------------------------
-    # 构建最终结果，保持原有分组顺序
-    # ---------------------------------------------------------
-    result = []
-    # 按标准 emoji 的分组顺序依次添加 emoji 到结果数组
-    group_order.each do |group|
-      result.concat(all_grouped[group] || [])
-    end
-
-    # ---------------------------------------------------------
-    # 处理自定义 emoji 特有的分组
-    # 有些自定义 emoji 可能属于标准 emoji 中不存在的分组
-    # 这些分组需要追加到结果末尾
-    # ---------------------------------------------------------
-    (all_grouped.keys - group_order).each do |group|
-      result.concat(all_grouped[group])
+    sorted_emojis = all_emojis.sort_by do |e|
+      is_custom = e.created_by.present? || plugin_emoji_names.include?(e.name)
+      group_index = group_order.index(e.group) || group_order.length
+      # 自定义 emoji: [0, group_index, position]
+      # 标准 emoji:   [1, group_index, position]
+      # 这样所有自定义 emoji 会排在所有标准 emoji 前面
+      [is_custom ? 0 : 1, group_index, all_emojis.index(e)]
     end
 
     # ---------------------------------------------------------
@@ -125,8 +101,8 @@ after_initialize do
     # ---------------------------------------------------------
     if denied_emojis.present?
       # reject 返回新数组，需要赋值给 result
-      result = result.reject { |e| denied_emojis.include?(e.name) }
+      sorted_emojis = sorted_emojis.reject { |e| denied_emojis.include?(e.name) }
     end
-    result
+    sorted_emojis
   end
 end
