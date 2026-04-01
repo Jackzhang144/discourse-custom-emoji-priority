@@ -3,7 +3,7 @@
 # name: discourse-custom-emoji-priority
 # about: Puts custom emojis at the top of the emoji picker list
 # version: 1.0
-# author: Jack Zhang
+# author: Jackzhang144
 # url: https://github.com/Jackzhang144/discourse-custom-emoji-priority
 
 # 声明此插件的主开关设置
@@ -78,6 +78,9 @@ after_initialize do
     # ---------------------------------------------------------
     group_order = standard_emojis.map(&:group).uniq
 
+    # 预处理分组索引映射，将 O(n) 查找变为 O(1)
+    group_index_map = group_order.each_with_index.to_h
+
     # ---------------------------------------------------------
     # 将所有 emoji（标准 + 自定义）混合后排序
     # 排序规则：
@@ -87,13 +90,16 @@ after_initialize do
     # ---------------------------------------------------------
     all_emojis = standard_emojis + custom_emojis
 
+    # 预处理位置索引映射，将 O(n) 查找变为 O(1)
+    emoji_index_map = all_emojis.each_with_index.to_h
+
     sorted_emojis = all_emojis.sort_by do |e|
       is_custom = e.created_by.present? || plugin_emoji_names.include?(e.name)
-      group_index = group_order.index(e.group) || group_order.length
+      group_index = group_index_map[e.group] || group_order.length
       # 自定义 emoji: [0, group_index, position]
       # 标准 emoji:   [1, group_index, position]
       # 这样所有自定义 emoji 会排在所有标准 emoji 前面
-      [is_custom ? 0 : 1, group_index, all_emojis.index(e)]
+      [is_custom ? 0 : 1, group_index, emoji_index_map[e]]
     end
 
     # ---------------------------------------------------------
