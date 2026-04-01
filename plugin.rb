@@ -45,6 +45,6 @@ after_initialize do
       [is_custom ? 0 : 1, group_index, emoji_index_map[e]]
     end
 
-    denied_emojis.present? ? sorted_emojis.reject { |e| denied_emojis.include?(e.name) } : sorted_emojis
+    denied_emojis&.any? ? sorted_emojis.reject { |e| denied_emojis.include?(e.name) } : sorted_emojis
   end
 end
