@@ -4,7 +4,7 @@
 # about: Puts custom emojis at the top of the emoji picker list
 # version: 1.0
 # author: Jackzhang144
-# url: https://github.com/Jackzhang144/discourse-custom-emoji-priority
+# url: https://github.com/InternationalRiversiders/discourse-custom-emoji-priority
 
 enabled_site_setting :custom_emoji_priority_enabled
 

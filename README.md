@@ -17,7 +17,7 @@
 按照我们的 [Install a Plugin](https://meta.discourse.org/t/install-a-plugin/19157) 指南，使用以下命令：
 
 ```sh
-git clone https://github.com/Jackzhang144/discourse-custom-emoji-priority.git
+git clone https://github.com/InternationalRiversiders/discourse-custom-emoji-priority.git
 ```
 
 ## 配置
