@@ -4,7 +4,7 @@
 # about: Puts custom emojis at the top of the emoji picker list
 # version: 1.0
 # author: Jack Zhang
-# # url: https://github.com/Jackzhang144/discourse-custom-emoji-priority
+# url: https://github.com/Jackzhang144/discourse-custom-emoji-priority
 
 # 声明此插件的主开关设置
 # 当管理员访问 /admin/site_settings 时，会显示此设置
